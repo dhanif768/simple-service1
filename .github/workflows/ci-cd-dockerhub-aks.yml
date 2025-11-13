@@ -114,13 +114,21 @@ jobs:
 
       - name: Azure CLI version
         run: az --version
+        
+      - name: Get admin AKS credentials (avoid kubelogin)
+        run: |
+          az aks get-credentials \
+            --resource-group ${{ secrets.AKS_RESOURCE_GROUP }} \
+            --name ${{ secrets.AKS_CLUSTER_NAME }} \
+            --admin \
+            --overwrite-existing
 
-      - name: Set kubectl context for AKS
-        uses: azure/aks-set-context@v3
-        with:
-          creds: ${{ secrets.AZURE_CREDENTIALS }}
-          cluster-name: ${{ secrets.AKS_CLUSTER_NAME }}
-          resource-group: ${{ secrets.AKS_RESOURCE_GROUP }}
+      # - name: Set kubectl context for AKS
+      #   uses: azure/aks-set-context@v3
+      #   with:
+      #     creds: ${{ secrets.AZURE_CREDENTIALS }}
+      #     cluster-name: ${{ secrets.AKS_CLUSTER_NAME }}
+      #     resource-group: ${{ secrets.AKS_RESOURCE_GROUP }}
 
       - name: Replace image in k8s manifests and deploy
         env:
