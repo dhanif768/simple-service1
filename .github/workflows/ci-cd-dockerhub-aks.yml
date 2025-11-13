@@ -140,7 +140,14 @@ jobs:
       #     creds: '${{ secrets.AZURE_CREDENTIALS }}'
       #     cluster-name: '${{ env.AKS_CLUSTER_NAME }}'
       #     resource-group: '${{ env.AKS_RESOURCE_GROUP }}'
+      - name: Deploy all k8s manifests
+        run: |
+          # Create namespace if it doesn't exist
+          kubectl create namespace ${{ env.NAMESPACE }} --dry-run=client -o yaml | kubectl apply -f -
       
+          # Apply all YAML files inside the k8s/ folder
+          kubectl apply -f k8s/ -n ${{ env.NAMESPACE }}
+
       # Create namespace if doesn't exist
       - run: |
           kubectl create namespace ${{ env.NAMESPACE }} --dry-run -o json | kubectl apply -f -
