@@ -140,11 +140,28 @@ jobs:
       #     creds: '${{ secrets.AZURE_CREDENTIALS }}'
       #     cluster-name: '${{ env.AKS_CLUSTER_NAME }}'
       #     resource-group: '${{ env.AKS_RESOURCE_GROUP }}'
+      - name: Create namespace if not exists
+        run: |
+          if [ -z "${{ env.NAMESPACE }}" ]; then
+            echo "ERROR: NAMESPACE environment variable is not set."
+            exit 1
+          fi
+          echo "Ensuring namespace exists: ${{ env.NAMESPACE }}"
+          kubectl get namespace "${{ env.NAMESPACE }}" >/dev/null 2>&1 || \
+            kubectl create namespace "${{ env.NAMESPACE }}"
       - name: Deploy all k8s manifests
         run: |
-          # Create namespace if it doesn't exist
-          kubectl create namespace ${{ env.NAMESPACE }} --dry-run=client -o yaml | kubectl apply -f -
-          # Apply all YAML files inside the k8s/ folder
-          kubectl apply -f k8s/ -n ${{ env.NAMESPACE }}
+          set -euo pipefail
+          if [ -z "${{ env.NAMESPACE }}" ]; then
+            echo "ERROR: NAMESPACE environment variable is not set."
+            exit 1
+          fi
+          NS="${{ env.NAMESPACE }}"
+          echo "Using namespace: $NS"
+          # Create namespace if it doesn't exist (idempotent)
+          kubectl get namespace "$NS" >/dev/null 2>&1 || kubectl create namespace "$NS"
+          # Apply all YAML files inside the k8s/ folder (recursively) to the namespace
+          kubectl apply -f k8s/ -n "$NS"
+
 
 
